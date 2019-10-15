@@ -400,6 +400,24 @@ argo_getsockopt (int fd, int level, int optname,
 }
 
 int
+argo_readspace(int fd, xen_argo_addr_t *dst_addr,
+               uint32_t space_required, uint32_t *out_max_msg_size)
+{
+  int ret;
+  struct argo_space query;
+
+  query.domain_id = dst_addr->domain_id;
+  query.aport = dst_addr->aport;
+  query.space_required = space_required;
+  query.max_message_size = 0;
+
+  ret = argo_ioctl (fd, ARGOIOCREADSPACE, &query);
+
+  *out_max_msg_size = query.max_message_size;
+  return ret;
+}
+
+int
 viptables_add (int fd, xen_argo_viptables_rule_t* rule, int position)
 {
   int ret;

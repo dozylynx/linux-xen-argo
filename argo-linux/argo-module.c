@@ -1564,6 +1564,52 @@ argo_notify(void)
     DEBUG_APPLE;
 }
 
+int
+argo_readspace (struct argo_private *p, struct argo_space *query)
+{
+    int ret;
+    xen_argo_ring_data_t *d;
+    uint16_t flags;
+    uint32_t max_message_size;
+
+    d = argo_kmalloc(sizeof(xen_argo_ring_data_t) +
+                     sizeof(xen_argo_ring_data_ent_t), GFP_ATOMIC);
+    if ( !d )
+        return -ENOMEM;
+
+    memset(d, 0, sizeof(xen_argo_ring_data_t) +
+                 sizeof(xen_argo_ring_data_ent_t));
+
+    d->data[0].ring.domain_id = query->domain_id;
+    d->data[0].ring.aport = query->aport;
+    d->data[0].space_required = query->space_required;
+    d->nent = 1;
+
+    ret = H_argo_notify(d);
+
+    flags = d->data[0].flags;
+    max_message_size = d->data[0].max_message_size;
+
+    argo_kfree(d);
+
+    if ( ret )
+        return ret;
+
+    if ( !(flags & XEN_ARGO_RING_EXISTS) )
+        return -ENOENT;
+
+    query->max_message_size = max_message_size;
+
+    if ( flags & XEN_ARGO_RING_EMSGSIZE )
+        return -EMSGSIZE;
+
+    if ( !(flags & XEN_ARGO_RING_SUFFICIENT) )
+        return -EAGAIN;
+
+    return 0;
+}
+
+
 /***********************  viptables ********************/
 static int
 viptables_add(struct argo_private *p, struct xen_argo_viptables_rule* rule,
@@ -3874,6 +3920,22 @@ argo_ioctl(struct file *f, unsigned int cmd, unsigned long arg)
                     return -EFAULT;
             } else
                 rc = argo_recvfrom (p, a.buf, a.len, a.flags, NULL, nonblock);
+        }
+        break;
+        case ARGOIOCREADSPACE:
+        DEBUG_APPLE;
+        {
+            struct argo_space query;
+
+            if ( copy_from_user(&query, (void __user *)arg,
+                                sizeof(struct argo_space)) )
+                return -EFAULT;
+
+            rc = argo_readspace (p, &query);
+
+            if ( copy_to_user((void __user *)arg, &query,
+                              sizeof(struct argo_space)) )
+                return -EFAULT;
         }
         break;
         case ARGOIOCVIPTABLESADD:

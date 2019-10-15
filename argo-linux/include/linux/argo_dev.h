@@ -58,6 +58,13 @@ struct argo_ring_id {
 	xen_argo_port_t aport;
 };
 
+struct argo_space {
+	domid_t domain_id;
+	xen_argo_port_t aport;
+	uint32_t space_required;
+	uint32_t max_message_size;
+};
+
 struct viptables_rule_pos {
     struct xen_argo_viptables_rule* rule;
     int position;
@@ -82,5 +89,6 @@ struct viptables_rule_pos {
 #define ARGOIOCVIPTABLESADD  _IOW (ARGO_TYPE, 12, struct viptables_rule_pos)
 #define ARGOIOCVIPTABLESDEL  _IOW (ARGO_TYPE, 13, struct viptables_rule_pos)
 #define ARGOIOCVIPTABLESLIST _IOW (ARGO_TYPE, 14, uint32_t) /*unused args */
+#define ARGOIOCREADSPACE	_IOW (ARGO_TYPE, 15, struct argo_space)
 
 #endif
