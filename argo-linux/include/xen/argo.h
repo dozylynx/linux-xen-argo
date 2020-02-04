@@ -4,7 +4,7 @@
  * Derived from v4v, the version 2 of v2v.
  *
  * Copyright (c) 2010, Citrix Systems
- * Copyright (c) 2018-2019, BAE Systems
+ * Copyright (c) 2018-2020, BAE Systems
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to
@@ -33,6 +33,7 @@
 #include "xen.h"
 #else
 #include <xen/interface/xen.h>
+#define XEN_FLEX_ARRAY_DIM
 #endif
 
 #define XEN_ARGO_DOMID_ANY       DOMID_INVALID
@@ -95,11 +96,7 @@ typedef struct xen_argo_ring
      * multiple of the message slot size.
      */
     uint8_t reserved[56];
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    uint8_t ring[];
-#elif defined(__GNUC__)
-    uint8_t ring[0];
-#endif
+    uint8_t ring[XEN_FLEX_ARRAY_DIM];
 } xen_argo_ring_t;
 
 typedef struct xen_argo_register_ring
@@ -149,11 +146,7 @@ typedef struct xen_argo_ring_data
 {
     uint32_t nent;
     uint32_t pad;
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    struct xen_argo_ring_data_ent data[];
-#elif defined(__GNUC__)
-    struct xen_argo_ring_data_ent data[0];
-#endif
+    struct xen_argo_ring_data_ent data[XEN_FLEX_ARRAY_DIM];
 } xen_argo_ring_data_t;
 
 struct xen_argo_ring_message_header
@@ -161,11 +154,7 @@ struct xen_argo_ring_message_header
     uint32_t len;
     struct xen_argo_addr source;
     uint32_t message_type;
-#if defined(__STDC_VERSION__) && __STDC_VERSION__ >= 199901L
-    uint8_t data[];
-#elif defined(__GNUC__)
-    uint8_t data[0];
-#endif
+    uint8_t data[XEN_FLEX_ARRAY_DIM];
 };
 
 typedef struct xen_argo_viptables_rule
@@ -294,16 +283,22 @@ typedef struct xen_argo_viptables_list
 
 /*
  * XEN_ARGO_OP_viptables_add
+ *
+ * Add an OpenXT viptables Argo firewall rule
  */
 #define XEN_ARGO_OP_viptables_add       6
 
 /*
  * XEN_ARGO_OP_viptables_del
+ *
+ * Delete an OpenXT viptables Argo firewall rule
  */
 #define XEN_ARGO_OP_viptables_del       7
 
 /*
  * XEN_ARGO_OP_viptables_list
+ *
+ * List the current OpenXT viptables Argo firewall rules
  */
 #define XEN_ARGO_OP_viptables_list      8
 
